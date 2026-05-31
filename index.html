@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Puzzle #2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;background:#0a0a0f}
+#app{min-height:100vh;width:100%;background:#0a0a0f;color:#e8e0d0;font-family:'Crimson Text',serif}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(1px 1px at 15% 25%,rgba(255,255,255,0.25) 0%,transparent 100%),radial-gradient(1px 1px at 80% 10%,rgba(255,255,255,0.2) 0%,transparent 100%),radial-gradient(1px 1px at 50% 70%,rgba(255,255,255,0.2) 0%,transparent 100%),radial-gradient(1px 1px at 90% 55%,rgba(255,255,255,0.15) 0%,transparent 100%),radial-gradient(1px 1px at 10% 80%,rgba(255,255,255,0.18) 0%,transparent 100%),radial-gradient(1px 1px at 65% 20%,rgba(255,255,255,0.15) 0%,transparent 100%),radial-gradient(1px 1px at 35% 50%,rgba(255,255,255,0.2) 0%,transparent 100%),radial-gradient(1px 1px at 75% 85%,rgba(255,255,255,0.12) 0%,transparent 100%);background-size:500px 500px}
+
+/* NAME SCREEN */
+#name-screen{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.name-box{width:100%;max-width:480px;text-align:center}
+.name-title{font-family:'Cinzel',serif;font-size:clamp(20px,4vw,28px);color:#c8a96e;margin-bottom:0.5rem;letter-spacing:0.05em}
+.name-sub{font-size:16px;color:#8a7a5a;margin-bottom:2rem;line-height:1.6}
+.name-input{width:100%;background:#0f0f18;border:0.5px solid #3a3020;border-radius:6px;color:#e8e0d0;font-family:'Crimson Text',serif;font-size:18px;padding:12px 16px;outline:none;text-align:center;transition:border-color 0.2s;margin-bottom:1rem}
+.name-input:focus{border-color:#8a6a2a}
+.name-btn{background:#8a6a2a;border:none;border-radius:6px;color:#f0e8d0;font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.2em;padding:12px 32px;cursor:pointer;transition:background 0.2s;width:100%}
+.name-btn:hover{background:#a07a38}
+
+/* MAIN */
+#main-screen{display:none;position:relative;z-index:1;min-height:100vh;padding:clamp(1rem,3vw,2rem)}
+
+/* TOP BAR */
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem}
+.top-greeting{font-family:'Cinzel',serif;font-size:clamp(9px,1.5vw,11px);letter-spacing:0.3em;color:#8a7a5a;text-transform:uppercase}
+.top-progress{font-family:'Cinzel',serif;font-size:clamp(9px,1.5vw,11px);letter-spacing:0.2em;color:#6a5a3a}
+.progress-bar-wrap{height:2px;background:#1a1a28;border-radius:2px;overflow:hidden;margin-bottom:1.25rem}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#8a6a2a,#c8a96e);border-radius:2px;transition:width 0.6s ease}
+
+/* LEADERBOARD */
+.leaderboard{background:#0d0d16;border:0.5px solid #2a2018;border-radius:8px;padding:0.9rem 1rem;margin-bottom:1.25rem}
+.lb-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.3em;color:#6a5a3a;margin-bottom:0.6rem;text-transform:uppercase}
+.lb-list{display:flex;flex-wrap:wrap;gap:8px}
+.lb-player{font-size:13px;color:#b8a888;display:flex;align-items:center;gap:6px}
+.lb-player .lb-name{color:#c8a96e;font-family:'Cinzel',serif;font-size:11px}
+.lb-player .lb-count{color:#6a5a3a;font-size:12px}
+.lb-player.lb-winner .lb-name{color:#c8a96e}
+.lb-winner-badge{font-size:10px;color:#c8a96e;letter-spacing:0.1em;font-family:'Cinzel',serif}
+.lb-empty{font-size:13px;color:#4a4030;font-style:italic}
+
+/* GRID */
+.puzzle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:12px;margin-bottom:2rem}
+
+/* CARD */
+.puzzle-card{border:0.5px solid #2a2018;border-radius:8px;background:#0d0d16;overflow:hidden;transition:border-color 0.2s}
+.puzzle-card:hover{border-color:#4a3a20}
+.puzzle-card.my-solved{border-color:#5a7a3a}
+.puzzle-card.locked{opacity:0.55}
+.card-header{padding:0.9rem 1rem;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none}
+.card-num{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:#6a5a3a;flex:1}
+.card-dot{width:7px;height:7px;border-radius:50%;background:#2a2018;flex-shrink:0;transition:background 0.3s}
+.puzzle-card.my-solved .card-dot{background:#5a9a4a}
+.puzzle-card.locked .card-dot{background:#2a2a4a}
+
+/* WHO SOLVED STRIP */
+.solvers-strip{padding:0 1rem 0.6rem;display:flex;flex-wrap:wrap;gap:6px}
+.solver-tag{font-size:11px;color:#5a8a4a;font-family:'Cinzel',serif;letter-spacing:0.05em;background:rgba(90,138,74,0.1);border:0.5px solid #3a5a2a;border-radius:4px;padding:2px 7px}
+
+/* BODY */
+.card-body{border-top:0.5px solid #1e1a10;padding:1rem;display:none}
+.card-body.open{display:block}
+.answer-type{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.2em;color:#6a5a3a;margin-bottom:0.75rem;text-transform:uppercase}
+.card-hint{font-size:clamp(14px,2vw,16px);line-height:1.8;color:#b8a888;margin-bottom:1rem;white-space:pre-wrap}
+.my-answer-box{padding:10px 14px;background:rgba(90,154,74,0.08);border:0.5px solid #3a5a2a;border-radius:6px;font-size:15px;color:#5a9a4a;font-style:italic}
+.lock-notice{text-align:center;padding:0.75rem;color:#4a4a6a;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em}
+.lock-icon{font-size:18px;margin-bottom:0.4rem;opacity:0.4}
+.input-row{display:flex;gap:8px}
+.pass-input{flex:1;min-width:0;background:#0a0a12;border:0.5px solid #3a3020;border-radius:6px;color:#e8e0d0;font-family:'Crimson Text',serif;font-size:16px;padding:9px 13px;outline:none;transition:border-color 0.2s}
+.pass-input:focus{border-color:#8a6a2a}
+.pass-input.error{border-color:#8a3a2a;animation:shake 0.3s ease}
+.pass-input.ok{border-color:#3a8a5a}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.submit-btn{background:#8a6a2a;border:none;border-radius:6px;color:#f0e8d0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.15em;padding:9px 16px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.2s}
+.submit-btn:hover{background:#a07a38}
+.submit-btn:disabled{background:#2a2018;color:#6a5a3a;cursor:not-allowed}
+.card-msg{font-size:13px;min-height:18px;margin-top:0.6rem;text-align:center}
+.card-msg.err{color:#c86a5a}
+.card-msg.ok{color:#5ab87a}
+.card-msg.loading{color:#8a6a2a}
+
+.divider{display:flex;align-items:center;gap:12px;margin:0.75rem 0}
+.divider-line{flex:1;height:0.5px;background:#2a2018}
+.divider-diamond{width:5px;height:5px;flex-shrink:0;background:#6a5a2a;transform:rotate(45deg)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="stars"></div>
+
+  <div id="name-screen">
+    <div class="name-box">
+      <div class="name-title">Enter Your Name</div>
+      <div class="name-sub">Your name will be shown when you solve a puzzle.<br>Race to solve all 21.</div>
+      <input class="name-input" id="name-input" type="text" placeholder="Your name..." autocomplete="off" maxlength="40"/>
+      <button class="name-btn" id="name-btn">Begin</button>
+    </div>
+  </div>
+
+  <div id="main-screen">
+    <div class="top-bar">
+      <div class="top-greeting" id="top-greeting"></div>
+      <div class="top-progress" id="top-progress">0 / 21 solved</div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+
+    <div class="leaderboard">
+      <div class="lb-title">Players</div>
+      <div class="lb-list" id="lb-list"><div class="lb-empty">No solves yet.</div></div>
+    </div>
+
+    <div class="puzzle-grid" id="puzzle-grid"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://adqnhmmgrrptiljuvnwv.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkcW5obW1ncnJwdGlsanV2bnd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MDIzNzMsImV4cCI6MjA4OTM3ODM3M30.k_pxMDRvOtBasUgqk-THJmY3GoJ0Ppgdg5ZhK2pQ4UE";
+
+const PUZZLES = [
+  {id:1, hint:`Did you know that V.M actually`, type:`Elite Ball (ends with "foot")`},
+  {id:2, hint:`The great of the Great Queen of Basgiath\nCombined with\nThe one who designed and envisioned for\n"X-Files", "Hannibal", "Umbrella Academy" and so much more\n\nYou will find my name, and the answer is of course,\nThe name of my greatest work,\nWhere Anne toils,\nOn the Seven Seas.`, type:`Book Name`},
+  {id:3, hint:`Serena's blood may complete my plot,\nPenned by the Queen of Onyx, and precious stones\nWhat is my name, buried below Astera`, type:`Book Name`},
+  {id:4, hint:`Though my name is shared by he who is famous for the Iliad, Book XVIII,\nFor his beauty, cannot match my own, (and did not capture his Merope's heart)\nAs my beauty is enternal, that of the Nightmares and Nightwraiths\nEven cyclopean, I retain the Ice Queen's heart.`, type:`Character Name (Book)`},
+  {id:5, hint:`Unlike KSI, my Forehead was once missing due to a mistake.\nWho am I, appearing at 1:23:50?`, type:`Film Character, Abbreviated / Acronym`},
+  {id:6, hint:`Though Aelin Ashryver Galathynius may inherit my name,\nShe cannot inherit my acclaim.\nThough my scourge was vanquished,\nMy greatest rival could not be languished.`, type:`Character Name, Original, First Chapter, Specifically not with new prefixes.`},
+  {id:7, hint:`Oh you thought I would make another Six Seven Joke?\nYou thought right.\nWho are we,\nThose who bore that shame,\nAs our Jerseys were to blame.`, type:`2 Character Names (Book / Movie / Tv Show), Formatted as [FemaleFirstName, MaleFirstName]`},
+  {id:8, hint:`My credence and corruption unbound,\nMy gifts at nightfall abound,\nBullies and five brothers scream my name\nWho am I, the paradigm of these names?`, type:`Author`},
+  {id:9, hint:`Son of a midget (hah, short!)\nDefender of a pope,\nThe evil at Verden,\nThe originator of the first great rebirth.\nWho am I, the ghost of Aechen?\n\nHINT: Those who know the answer, do not speak his acclaim,\nInstead call him by that which his people refer to him today.`, type:`Historical Figure`},
+  {id:10, hint:`Though my counterpart lived with acclaim,\nI was not so lucky, burned beneath the flames.\nThough some youngsters say my last resembles their slang,\nAll the great reformers, went out with a bang,\nBut Wycliffe was protected, unlike me.`, type:`Historical Figure`},
+  {id:11, hint:`I am solved before breakfast by many each day,\nMy clues glow in colors instead of words.\nOne among you cannot resist posting the results,\nThough never the answer itself.\nWhat am I?\n\n*Random Thing: The Date This Was Made Is 31/05/2026*`, type:`Word, All Caps.`},
+  {id:12, hint:`The Veliant's first love.\n(She deserved better, fuckass author)`, type:`Character Name, First Name`},
+  {id:13, hint:`When did a phone number become so sad?\nI guess it's only logical that it became the case,\nAs many still do not understand.`, type:`Make sure to include dashes`},
+  {id:14, hint:`Sticks and stones may break my bones,\nBut sacred versions in which you will find,\nMy heart, carved in Peridot\nBut what was it, my true form?\nWrought against he who is named after the door of the fallen saint?`, type:`Creature Type (True Form) Plus Character Name in Format: [FirstName LastName, Form]`},
+  {id:15, hint:`What??? Hawkeye can kill Thanos?`, type:`Film (Make sure not to get tripped up)`},
+  {id:16, hint:`Truly a cannon event for all,\nFirst the dating,\nThen this,\nFor the others,\nWimbledon, and Battle of the Sexes.\nFor me though,\nI had this.`, type:`Film (ew)`},
+  {id:17, hint:`"In the name of justice"\n"that could literally be thousands of people"\n"Shot him in the back"\n"Hundreds"\n"Unarmed"\n"At least 50"\n"He was white"`, type:`Sentence (with exclamation mark and proper punctuation)`},
+  {id:18, hint:`They say I am the greatest number,\nThe one of the crystal gates,\nThe number of moves it took Obi-Wan.\nSchoolhouse ROCKS!`, type:`Number (digit)`},
+  {id:19, hint:`How chronically online are yall?\ntfw:`, type:`Sentence`},
+  {id:20, hint:`The true demon's attire...\nBut GAWDDAM.`, type:`I can't give away the category for this one, answer is capitalized, one word`},
+  {id:21, hint:`You have all you need, just how many of what is the question??? (huh?)\nHint: Lines???`, type:`???`}
+];
+
+function getSessionId() {
+  let sid = localStorage.getItem('puzzle_v2_session');
+  if (!sid) { sid = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('puzzle_v2_session', sid); }
+  return sid;
+}
+function getPlayerName() { return localStorage.getItem('puzzle_v2_name') || ''; }
+function setPlayerName(n) { localStorage.setItem('puzzle_v2_name', n); }
+
+const sessionId = getSessionId();
+let playerName = getPlayerName();
+
+// State
+let mySolvedIds = new Set();      // puzzle ids this player solved
+let allSolves = [];               // [{session_id, puzzle_id, name}]
+let openCards = new Set();
+
+const hdrs = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+
+async function fetchAllSolves() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/player_solves_v2?select=session_id,puzzle_id,players_v2(name)`, { headers: hdrs });
+  const rows = await res.json();
+  return rows.map(r => ({ session_id: r.session_id, puzzle_id: r.puzzle_id, name: r['players_v2']?.name || '?' }));
+}
+
+async function registerPlayer() {
+  await fetch(`${SUPABASE_URL}/rest/v1/players_v2`, {
+    method: 'POST',
+    headers: { ...hdrs, 'Prefer': 'resolution=ignore-duplicates' },
+    body: JSON.stringify({ session_id: sessionId, name: playerName })
+  });
+}
+
+async function submitAnswer(puzzleId, attempt) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/check_puzzle_answer_v2`, {
+    method: 'POST',
+    headers: hdrs,
+    body: JSON.stringify({ p_puzzle_id: puzzleId, p_attempt: attempt, p_session_id: sessionId, p_player_name: playerName })
+  });
+  return await res.json();
+}
+
+function buildLeaderboard(solves) {
+  const counts = {};
+  const names = {};
+  solves.forEach(s => {
+    counts[s.session_id] = (counts[s.session_id] || 0) + 1;
+    names[s.session_id] = s.name;
+  });
+  const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const el = document.getElementById('lb-list');
+  if (sorted.length === 0) { el.innerHTML = '<div class="lb-empty">No solves yet.</div>'; return; }
+  el.innerHTML = sorted.map(([sid, count]) => {
+    const name = names[sid] || '?';
+    const isWinner = count === 21;
+    const isMe = sid === sessionId;
+    return `<div class="lb-player${isWinner?' lb-winner':''}">
+      <span class="lb-name">${name}${isMe?' (you)':''}</span>
+      <span class="lb-count">${count}/21</span>
+      ${isWinner ? '<span class="lb-winner-badge">✦ WINNER</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function buildGrid(solves) {
+  const myCount = mySolvedIds.size;
+  document.getElementById('top-progress').textContent = myCount + ' / 21 solved';
+  document.getElementById('prog-fill').style.width = (myCount / 21 * 100) + '%';
+
+  // Group solves by puzzle id
+  const solvesByPuzzle = {};
+  solves.forEach(s => {
+    if (!solvesByPuzzle[s.puzzle_id]) solvesByPuzzle[s.puzzle_id] = [];
+    solvesByPuzzle[s.puzzle_id].push(s.name);
+  });
+
+  const myHasAll20 = [...Array(20)].every((_,i) => mySolvedIds.has(i+1));
+  const grid = document.getElementById('puzzle-grid');
+
+  PUZZLES.forEach(p => {
+    let card = document.getElementById('card-' + p.id);
+    const isMySolved = mySolvedIds.has(p.id);
+    const isLocked = p.id === 21 && !myHasAll20;
+    const isOpen = openCards.has(p.id);
+    const solversHere = solvesByPuzzle[p.id] || [];
+
+    if (!card) { card = document.createElement('div'); card.id = 'card-' + p.id; grid.appendChild(card); }
+
+    card.className = 'puzzle-card' + (isMySolved ? ' my-solved' : '') + (isLocked ? ' locked' : '');
+
+    let solversHTML = solversHere.length > 0
+      ? `<div class="solvers-strip">${solversHere.map(n=>`<span class="solver-tag">✓ ${n}</span>`).join('')}</div>`
+      : '';
+
+    let bodyHTML = '';
+    if (isLocked) {
+      bodyHTML = `<div class="card-body${isOpen?' open':''}"><div class="lock-notice"><div class="lock-icon">🔒</div>Solve all other puzzles to unlock.</div></div>`;
+    } else if (isMySolved) {
+      bodyHTML = `<div class="card-body${isOpen?' open':''}">
+        <div class="answer-type">Answer Type: ${p.type}</div>
+        <div class="card-hint">${p.hint}</div>
+        <div class="my-answer-box">✓ You solved this.</div>
+      </div>`;
+    } else {
+      bodyHTML = `<div class="card-body${isOpen?' open':''}">
+        <div class="answer-type">Answer Type: ${p.type}</div>
+        <div class="card-hint">${p.hint}</div>
+        <div class="input-row">
+          <input class="pass-input" id="inp-${p.id}" type="text" placeholder="Your answer..." autocomplete="off" spellcheck="false"/>
+          <button class="submit-btn" id="btn-${p.id}" onclick="doSubmit(${p.id})">Submit</button>
+        </div>
+        <div class="card-msg" id="msg-${p.id}"></div>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(${p.id})">
+        <div class="card-num">${ordinal(p.id)} Puzzle</div>
+        <div class="card-dot"></div>
+      </div>
+      ${solversHTML}
+      ${bodyHTML}`;
+
+    if (!isMySolved && !isLocked) {
+      const inp = document.getElementById('inp-' + p.id);
+      if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') doSubmit(p.id); });
+    }
+  });
+}
+
+function toggleCard(id) {
+  if (openCards.has(id)) openCards.delete(id);
+  else openCards.add(id);
+  const body = document.getElementById('card-' + id)?.querySelector('.card-body');
+  if (body) body.classList.toggle('open', openCards.has(id));
+}
+
+async function doSubmit(puzzleId) {
+  const inp = document.getElementById('inp-' + puzzleId);
+  const btn = document.getElementById('btn-' + puzzleId);
+  const msg = document.getElementById('msg-' + puzzleId);
+  const attempt = inp.value.trim();
+  if (!attempt) return;
+  btn.disabled = true;
+  inp.classList.remove('error','ok');
+  msg.className = 'card-msg loading';
+  msg.textContent = 'Checking...';
+  try {
+    const result = await submitAnswer(puzzleId, attempt);
+    if (result && result.success) {
+      inp.classList.add('ok');
+      msg.className = 'card-msg ok';
+      msg.textContent = '✦ Correct!';
+      mySolvedIds.add(puzzleId);
+      await refresh();
+    } else {
+      inp.classList.add('error');
+      msg.className = 'card-msg err';
+      msg.textContent = (result && result.message) || 'Incorrect.';
+      setTimeout(() => inp.classList.remove('error'), 500);
+      btn.disabled = false;
+    }
+  } catch(e) {
+    msg.className = 'card-msg err';
+    msg.textContent = 'Connection error. Try again.';
+    btn.disabled = false;
+  }
+}
+
+async function refresh() {
+  const solves = await fetchAllSolves();
+  allSolves = solves;
+  mySolvedIds = new Set(solves.filter(s => s.session_id === sessionId).map(s => s.puzzle_id));
+  buildLeaderboard(solves);
+  buildGrid(solves);
+}
+
+function ordinal(n) {
+  const s=['th','st','nd','rd'],v=n%100;
+  return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+
+function startPolling() {
+  setInterval(refresh, 5000);
+}
+
+document.getElementById('name-btn').addEventListener('click', beginSession);
+document.getElementById('name-input').addEventListener('keydown', e => { if (e.key==='Enter') beginSession(); });
+
+async function beginSession() {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) return;
+  setPlayerName(val);
+  playerName = val;
+  await registerPlayer();
+  document.getElementById('name-screen').style.display = 'none';
+  document.getElementById('main-screen').style.display = 'block';
+  document.getElementById('top-greeting').textContent = playerName;
+  await refresh();
+  startPolling();
+}
+
+async function init() {
+  if (playerName) {
+    document.getElementById('name-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    document.getElementById('top-greeting').textContent = playerName;
+    await registerPlayer();
+    await refresh();
+    startPolling();
+  } else {
+    document.getElementById('name-input').focus();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
