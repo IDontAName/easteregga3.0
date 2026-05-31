@@ -215,7 +215,7 @@ function buildLeaderboard(solves) {
   }).join('');
 }
 
-function buildGrid(solves) {
+function buildGrid(solves, force) {
   const myCount = mySolvedIds.size;
   document.getElementById('top-progress').textContent = myCount + ' / 21 solved';
   document.getElementById('prog-fill').style.width = (myCount / 21 * 100) + '%';
@@ -238,6 +238,15 @@ function buildGrid(solves) {
     const solversHere = solvesByPuzzle[p.id] || [];
 
     if (!card) { card = document.createElement('div'); card.id = 'card-' + p.id; grid.appendChild(card); }
+
+    // Don't re-render this card if the player is actively typing in it
+    const activeEl = document.activeElement;
+    const cardEl = document.getElementById('card-' + p.id);
+    if (!force && cardEl && cardEl.contains(activeEl) && activeEl.tagName === 'INPUT') {
+      // Just update solvers strip and class without touching input
+      card.className = 'puzzle-card' + (isMySolved ? ' my-solved' : '') + (isLocked ? ' locked' : '');
+      return;
+    }
 
     card.className = 'puzzle-card' + (isMySolved ? ' my-solved' : '') + (isLocked ? ' locked' : '');
 
@@ -305,7 +314,7 @@ async function doSubmit(puzzleId) {
       msg.className = 'card-msg ok';
       msg.textContent = '✦ Correct!';
       mySolvedIds.add(puzzleId);
-      await refresh();
+      await refresh(true);
     } else {
       inp.classList.add('error');
       msg.className = 'card-msg err';
@@ -320,13 +329,13 @@ async function doSubmit(puzzleId) {
   }
 }
 
-async function refresh() {
+async function refresh(force) {
   try {
     const solves = await fetchAllSolves();
     allSolves = solves;
     mySolvedIds = new Set(solves.filter(s => s.session_id === sessionId).map(s => s.puzzle_id));
     buildLeaderboard(solves);
-    buildGrid(solves);
+    buildGrid(solves, force);
   } catch(e) {
     console.error('refresh error', e);
   }
